@@ -13,4 +13,8 @@ if __name__ == '__main__':
     print 'Server: http://{0}:{1}'.format(host, port)
 
     server = HTTPServer((host, port), HttpProcessor)
-    server.serve_forever()
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        server.server_close()
+    print('\nServer stopped\n')
