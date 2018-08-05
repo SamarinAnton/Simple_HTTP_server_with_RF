@@ -1,8 +1,10 @@
 *** Settings ***
 Library     RequestsLibrary
+Library     Process
 
-Suite Setup     Create Session  localhost   http://${HOST}:${PORT}   max_retries=3
-Test Template   Send Header And Verify Return Code
+Suite Setup         Run Server And Create Session
+Suite Teardown      Kill Server And Delete Session
+Test Template       Send Header And Verify Return Code
 
 *** Variables ***
 ${PORT}     8080
@@ -18,5 +20,14 @@ Wrong character         123 45-6                        500
 Send Header And Verify Return Code
     [Arguments]    ${name}      ${code}
     ${header}=      Create Dictionary       ${name}=something
-    ${resp}=        Get Request             localhost   /       headers=${header}
+    ${resp}=        Get Request             localhost   /           headers=${header}
     Should Be Equal As Strings              ${resp.status_code}     ${code}
+
+Run Server And Create Session
+    Start Process       python2     main.py                     alias=server
+    Create Session      localhost   http://${HOST}:${PORT}      max_retries=3
+    Wait For Process    server      timeout=100ms
+
+Kill Server And Delete Session
+    Delete All Sessions
+    Terminate Process 	server 	kill=true
